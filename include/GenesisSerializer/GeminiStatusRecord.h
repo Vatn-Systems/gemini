@@ -1,7 +1,7 @@
 #pragma once
 
-#include "/home/pgdesk2/tritechsdk/include/console/ciheader.h"
-#include "/home/pgdesk2/tritechsdk/include/GenesisSerializer/GlfLoggerGlobalTypes.h"
+#include "../console/ciheader.h"
+#include "../GenesisSerializer/GlfLoggerGlobalTypes.h"
 
 /*
 ** Supported message types are currently logged

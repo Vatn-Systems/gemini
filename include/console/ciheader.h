@@ -1,7 +1,7 @@
 #pragma once
 
-#include "/home/pgdesk2/tritechsdk/include/types.h"
-#include "/home/pgdesk2/tritechsdk/include/console/console_global_types.h"
+#include "../types.h"
+#include "../console/console_global_types.h"
 
 using namespace tdi;
 
