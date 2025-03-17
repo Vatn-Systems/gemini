@@ -11,7 +11,9 @@ To run the driver:
 7. Control + C kills the program gracefully
 
 Other notes:
-Gemini IP is 192.168.50.201
+- Gemini IP is 192.168.50.201
+- For some reason the relative paths in the Tritech library don't make sense and I've had to update them manually for the libraries I wish to use.
+- All of the code outside of the sandbox directory is from Tritech.
 
 
 
