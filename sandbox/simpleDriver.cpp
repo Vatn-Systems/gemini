@@ -11,8 +11,23 @@ static unsigned short sg_sonarID = 0;
 static bool writeToFile = true;
 static std::string outputBasePathStr = "./sonarData/"; 
 int targetImageCounter = 0;
+<<<<<<< HEAD
+bool statusMessageRecieved = false;
+bool readyForSettings = false;
+
+static void ConfigOnline( bool fOnline )
+{
+    // configure sonar to online / offline
+    SequencerApi::Svs5SetConfiguration(
+                            SequencerApi::SVS5_CONFIG_ONLINE,
+                            sizeof(bool),
+                            &fOnline
+                            );
+}
+=======
 
 static void ConfigOnline(bool fOnline);
+>>>>>>> origin/main
 
 static void callbackFun(
     unsigned int msgType,
@@ -42,6 +57,12 @@ static void callbackFun(
                   << (int)((from >> 8) & 0xFF) << "." << (int)((from >> 0) & 0xFF) << "\n";
 
         std::string s;
+<<<<<<< HEAD
+        if (!statusMessageRecieved){
+            statusMessageRecieved = true;
+        }
+=======
+>>>>>>> origin/main
         break;
     }
     case SequencerApi::GLF_LIVE_TARGET_IMAGE:
@@ -52,6 +73,11 @@ static void callbackFun(
         std::cout << "data len = " << len
                   << ", Width " << logTgtImage->m_mainImage.m_uiEndBearing
                   << ", Height " << logTgtImage->m_mainImage.m_uiEndRange
+<<<<<<< HEAD
+                  << ( ( logTgtImage->m_mainImage.m_usPingFlags & 0x8000 ) ? " User Selected SOS " : "Sonar Speed of Sound " )
+                  << logTgtImage->m_mainImage.m_fSosAtXd
+=======
+>>>>>>> origin/main
                   << std::endl;
 
         // write to file
@@ -105,6 +131,43 @@ int main()
         std::placeholders::_2,
         std::placeholders::_3));
 
+<<<<<<< HEAD
+    ConfigOnline(true);    
+
+    
+    /*
+    bool isonline;
+    SequencerApi::Svs5GetConfiguration(
+    SequencerApi::SVS5_CONFIG_ONLINE,
+    sizeof(bool),
+    &isonline
+    );
+
+    std::cout << "Online status: " << std::to_string(isonline) << std::endl;
+
+    ConfigOnline(false);
+
+    bool isonline2;
+    SequencerApi::Svs5GetConfiguration(
+        SequencerApi::SVS5_CONFIG_ONLINE,
+        sizeof(bool),
+        &isonline2
+        );
+
+    std::cout << "Online status: " << std::to_string(isonline2) << std::endl;
+    */
+
+    /*
+    int gain2;
+    SequencerApi::Svs5GetConfiguration(
+        SequencerApi::SVS5_CONFIG_GAIN,
+        sizeof(int),
+        &gain2
+        );
+
+    std::cout << "The set gain is: " << gain2 << std::endl;
+    */
+=======
     // TODO: Not sure if the config is taking...verify this.
     SequencerApi::SequencerSosConfig sSosConfig;
     sSosConfig.m_bUsedUserSos = true;
@@ -114,14 +177,50 @@ int main()
         SequencerApi::SVS5_CONFIG_SOUND_VELOCITY,
         sizeof(sSosConfig),
         &sSosConfig);
+>>>>>>> origin/main
 
     // Required to keep alive
     while (true)
     {
+<<<<<<< HEAD
+        if (statusMessageRecieved & !readyForSettings)
+        { // Do settings
+            // ConfigOnline(true);
+            readyForSettings = true;
+            std::cout << "Gemini is ready for settings" << std::endl;
+        }
+        
+        if (readyForSettings)
+        {
+            size_t gain = 0;
+            // Get gain value
+            SequencerApi::Svs5GetConfiguration(
+                SequencerApi::SVS5_CONFIG_GAIN,
+                sizeof(int),
+                &gain);
+            std::cout << "Get:: Gain " << std::dec << gain << std::endl;
+
+            size_t gain2 = 50;
+            // Get gain value
+            SequencerApi::Svs5SetConfiguration(
+                SequencerApi::SVS5_CONFIG_GAIN,
+                sizeof(int),
+                &gain2);
+            std::cout << "Set:: Gain " << std::dec << gain2 << std::endl;
+
+            size_t gain3 = 0;
+            // Get gain value
+            SequencerApi::Svs5GetConfiguration(
+                SequencerApi::SVS5_CONFIG_GAIN,
+                sizeof(int),
+                &gain3);
+            std::cout << "Get:: Gain " << std::dec << gain3 << std::endl;
+=======
         int counter = 0;
         while (counter < 1E9)
         {
             counter = counter + 1;
+>>>>>>> origin/main
         }
     }
 
