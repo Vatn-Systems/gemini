@@ -13,28 +13,20 @@ static std::string outputBasePathStr = "./sonarData/";
 int targetImageCounter = 0;
 bool statusMessageRecieved = false;
 bool readyForSettings = false;
+bool firstTime = true;
 
-static void ConfigOnline( bool fOnline )
-{
-    // configure sonar to online / offline
-    SequencerApi::Svs5SetConfiguration(
-                            SequencerApi::SVS5_CONFIG_ONLINE,
-                            sizeof(bool),
-                            &fOnline
-                            );
-}
 
 static void callbackFun(
     unsigned int msgType,
     size_t size,
     const char *const value)
-{
-    const GLF::GeminiSonarStatusMessage *const statusMsg = (const GLF::GeminiSonarStatusMessage *const)value;
+    {
+        const GLF::GeminiSonarStatusMessage *const statusMsg = (const GLF::GeminiSonarStatusMessage *const)value;
     const GLF::GeminiStatusRecord *const pStatus = &statusMsg->m_geminiSonarStatus;
 
     switch (msgType) // Add different cases here corresponding to the different messages that can be recieved by the Gemini
     {
-    case SequencerApi::GEMINI_STATUS:
+        case SequencerApi::GEMINI_STATUS:
     {
         const GLF::GeminiSonarStatusMessage *const statusMsg = (const GLF::GeminiSonarStatusMessage *const)value;
         const GLF::GeminiStatusRecord *const pStatus = &statusMsg->m_geminiSonarStatus;
@@ -48,9 +40,9 @@ static void callbackFun(
         unsigned int from = pStatus->m_sonarAltIp;
         // TODO: IP address writes out backwards. NBD but should fix. 
         std::cout << std::dec << std::setfill('0') << std::setw(2)
-                  << (int)((from >> 24) & 0xFF) << "." << (int)((from >> 16) & 0xFF) << "."
-                  << (int)((from >> 8) & 0xFF) << "." << (int)((from >> 0) & 0xFF) << "\n";
-
+        << (int)((from >> 24) & 0xFF) << "." << (int)((from >> 16) & 0xFF) << "."
+        << (int)((from >> 8) & 0xFF) << "." << (int)((from >> 0) & 0xFF) << "\n";
+        
         std::string s;
         if (!statusMessageRecieved){
             statusMessageRecieved = true;
@@ -61,14 +53,14 @@ static void callbackFun(
     {
         GLF::GLogTargetImage *logTgtImage = (GLF::GLogTargetImage *)value;
         int len = logTgtImage->m_mainImage.m_vecData->size();
-
+        
         std::cout << "data len = " << len
-                  << ", Width " << logTgtImage->m_mainImage.m_uiEndBearing
-                  << ", Height " << logTgtImage->m_mainImage.m_uiEndRange
-                  << ( ( logTgtImage->m_mainImage.m_usPingFlags & 0x8000 ) ? " User Selected SOS " : "Sonar Speed of Sound " )
-                  << logTgtImage->m_mainImage.m_fSosAtXd
-                  << std::endl;
-
+        << ", Width " << logTgtImage->m_mainImage.m_uiEndBearing
+        << ", Height " << logTgtImage->m_mainImage.m_uiEndRange
+        << ( ( logTgtImage->m_mainImage.m_usPingFlags & 0x8000 ) ? " User Selected SOS " : "Sonar Speed of Sound " )
+        << logTgtImage->m_mainImage.m_fSosAtXd
+        << std::endl;
+        
         // write to file
         if (writeToFile)    
         {
@@ -94,18 +86,54 @@ static void callbackFun(
         std::cout << "other msg type: " << msgType << std::endl;
         break;
     }
-    }
+}
 }
 
+static void ConfigOnline( bool fOnline )
+{
+    // configure sonar to online / offline
+    SequencerApi::Svs5SetConfiguration(
+                            SequencerApi::SVS5_CONFIG_ONLINE,
+                            sizeof(bool),
+                            &fOnline
+                            );
+}
 
 // For clean exit
 void signalHandler(int signum)
 {
     printf("Received SIG_TERM...stopping Svs5\n");
-
     SequencerApi::StopSvs5();
-
     exit(signum);
+}
+
+void ConfigGain(int gain)
+{
+    SequencerApi::Svs5SetConfiguration(
+        SequencerApi::SVS5_CONFIG_GAIN,
+        sizeof(int),
+        &gain);
+        std::cout << "Set:: Gain " << std::dec << gain << std::endl;
+    }
+    
+    void ConfigRange(double rangeLinesMeters)
+    {
+        SequencerApi::Svs5SetConfiguration(
+            SequencerApi::SVS5_CONFIG_RANGE,
+        sizeof(double),
+        &rangeLinesMeters);
+
+        std::cout << "Set:: Range " << rangeLinesMeters << std::endl;
+}
+
+void ConfigNoiseReductionFilter(bool enable)
+{
+    SequencerApi::Svs5SetConfiguration(
+        SequencerApi::SVS5_CONFIG_NOISE_REDUCTION,
+        sizeof(bool), (const char* const)&enable);
+
+        std::cout << "Set:: NoiseReductionFilter " << enable << std::endl;
+
 }
 
 int main()
@@ -122,75 +150,23 @@ int main()
 
     ConfigOnline(true);    
 
-    
-    /*
-    bool isonline;
-    SequencerApi::Svs5GetConfiguration(
-    SequencerApi::SVS5_CONFIG_ONLINE,
-    sizeof(bool),
-    &isonline
-    );
-
-    std::cout << "Online status: " << std::to_string(isonline) << std::endl;
-
-    ConfigOnline(false);
-
-    bool isonline2;
-    SequencerApi::Svs5GetConfiguration(
-        SequencerApi::SVS5_CONFIG_ONLINE,
-        sizeof(bool),
-        &isonline2
-        );
-
-    std::cout << "Online status: " << std::to_string(isonline2) << std::endl;
-    */
-
-    /*
-    int gain2;
-    SequencerApi::Svs5GetConfiguration(
-        SequencerApi::SVS5_CONFIG_GAIN,
-        sizeof(int),
-        &gain2
-        );
-
-    std::cout << "The set gain is: " << gain2 << std::endl;
-    */
-
     // Required to keep alive
     while (true)
     {
-        if (statusMessageRecieved & !readyForSettings)
+        if (statusMessageRecieved && !readyForSettings) // We got the first message and can now push settings to the sonar...
         { // Do settings
             // ConfigOnline(true);
             readyForSettings = true;
             std::cout << "Gemini is ready for settings" << std::endl;
         }
         
-        if (readyForSettings)
+        if (readyForSettings && firstTime) // We've recieved the first message but have not passed settings to the sonar...
         {
-            size_t gain = 0;
-            // Get gain value
-            SequencerApi::Svs5GetConfiguration(
-                SequencerApi::SVS5_CONFIG_GAIN,
-                sizeof(int),
-                &gain);
-            std::cout << "Get:: Gain " << std::dec << gain << std::endl;
+            ConfigRange(50.0);
 
-            size_t gain2 = 50;
-            // Get gain value
-            SequencerApi::Svs5SetConfiguration(
-                SequencerApi::SVS5_CONFIG_GAIN,
-                sizeof(int),
-                &gain2);
-            std::cout << "Set:: Gain " << std::dec << gain2 << std::endl;
+            ConfigGain(50);
 
-            size_t gain3 = 0;
-            // Get gain value
-            SequencerApi::Svs5GetConfiguration(
-                SequencerApi::SVS5_CONFIG_GAIN,
-                sizeof(int),
-                &gain3);
-            std::cout << "Get:: Gain " << std::dec << gain3 << std::endl;
+            firstTime = false;
         }
     }
 
